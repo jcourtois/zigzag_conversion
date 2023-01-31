@@ -7,30 +7,30 @@ struct Solution {}
 #[cfg(test)]
 impl Solution {
     pub fn convert(s: String, num_rows: i32) -> String {
+        match (s.is_ascii(), s.len(), num_rows) {
+            (s, _, _) if !s => panic!("s must be ascii!"),
+            (_, _, n) if n < 1 => panic!("num_rows must be at least 1"),
+            (_, l, _) if l < 1 => panic!("s must have at least one char"),
+            (_, _, n) if n > 1000 => panic!("num_rows must be at most 1000"),
+            (_, l, _) if l > 1000 => panic!("s must be at most 1000 chars in length"),
+            (_, l, n) if l == 1 || n == 1 => return s,
+            (_, _, _) => (),
+        }
+        let mut rows = HashMap::new();
+        let num_rows = num_rows as usize;
         let length = s.len();
-        let num_rows = num_rows as isize;
         let cycle = (num_rows - 1) * 2;
 
-        if num_rows < 1 || num_rows > 1000 {
-            panic!("numRows must be between 1 and 1000")
-        }
-        if length <= 1 || num_rows == 1 {
-            return s;
-        }
-
-        let mut temp: HashMap<usize, String> = HashMap::new();
-
-        for (idx, c) in s.chars().enumerate() {
-            let idx = idx as isize;
-            let n = idx % cycle;
-            let key = if n >= num_rows { cycle - n } else { n } as usize;
-            temp.entry(key)
-                .or_insert_with(|| String::with_capacity(length / num_rows as usize))
-                .push(c);
+        for (idx, ch) in s.chars().enumerate() {
+            let dy = idx % cycle;
+            let row = if dy >= num_rows { cycle - dy } else { dy };
+            rows.entry(row)
+                .or_insert_with(|| String::with_capacity(length / num_rows))
+                .push(ch);
         }
 
-        (0..num_rows as usize)
-            .flat_map(|i| temp.get(&i))
+        (0..num_rows)
+            .flat_map(|i| rows.get(&i))
             .map(|l| l.to_owned())
             .reduce(|s1, s2| s1 + &s2)
             .unwrap()
@@ -42,27 +42,44 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_string() {
-        assert_eq!(Solution::convert(String::from(""), 1), String::from(""));
-    }
-
-    #[test]
     fn single_char() {
         assert_eq!(Solution::convert(String::from("A"), 1), String::from("A"));
         assert_eq!(Solution::convert(String::from("B"), 1), String::from("B"));
     }
 
     #[test]
-    #[should_panic(expected = "numRows must be between 1 and 1000")]
-    fn error_handling() {
-        assert_eq!(Solution::convert(String::from(""), 0), String::from(""));
+    #[should_panic(expected = "s must be ascii!")]
+    fn ascii_error_handling() {
+        assert_eq!(Solution::convert(String::from("سلام"), 0), String::from(""));
+    }
+
+    #[test]
+    #[should_panic(expected = "num_rows must be at least 1")]
+    fn low_rows_error_handling() {
+        assert_eq!(Solution::convert(String::from("ABC"), 0), String::from(""));
+    }
+
+    #[test]
+    #[should_panic(expected = "num_rows must be at most 1000")]
+    fn high_rows_error_handling() {
         assert_eq!(
-            Solution::convert(String::from("A"), 2000),
-            String::from("A")
+            Solution::convert(String::from("ABC"), 9999),
+            String::from("")
         );
+    }
+
+    #[test]
+    #[should_panic(expected = "s must have at least one char")]
+    fn empty_string_error_handling() {
+        assert_eq!(Solution::convert(String::from(""), 3), String::from(""));
+    }
+
+    #[test]
+    #[should_panic(expected = "s must be at most 1000 chars in length")]
+    fn long_string_error_handling() {
         assert_eq!(
-            Solution::convert(String::from("B"), -1000),
-            String::from("B")
+            Solution::convert("XXXXXCXXXX".repeat(101), 3),
+            String::from("")
         );
     }
 
