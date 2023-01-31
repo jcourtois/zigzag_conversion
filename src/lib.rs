@@ -18,14 +18,14 @@ impl Solution {
         }
         let mut rows = HashMap::new();
         let num_rows = num_rows as usize;
-        let length = s.len();
+        let capacity = s.len() / num_rows;
         let cycle = (num_rows - 1) * 2;
 
         for (idx, ch) in s.chars().enumerate() {
             let dy = idx % cycle;
             let row = if dy >= num_rows { cycle - dy } else { dy };
             rows.entry(row)
-                .or_insert_with(|| String::with_capacity(length / num_rows))
+                .or_insert_with(|| String::with_capacity(capacity))
                 .push(ch);
         }
 
