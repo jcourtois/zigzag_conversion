@@ -1,5 +1,5 @@
 #[cfg(test)]
-use std::collections::{HashMap, LinkedList};
+use std::collections::HashMap;
 
 #[cfg(test)]
 struct Solution {}
@@ -9,7 +9,7 @@ impl Solution {
     pub fn convert(s: String, num_rows: i32) -> String {
         let length = s.len();
         let num_rows = num_rows as isize;
-        let mut output = String::with_capacity(length);
+        let cycle = (num_rows - 1) * 2;
 
         if num_rows < 1 || num_rows > 1000 {
             panic!("numRows must be between 1 and 1000")
@@ -18,26 +18,22 @@ impl Solution {
             return s;
         }
 
-        let cycle = ((num_rows - 1) * 2) as isize;
-        let mut temp: HashMap<usize, LinkedList<char>> = HashMap::new();
+        let mut temp: HashMap<usize, String> = HashMap::new();
 
         for (idx, c) in s.chars().enumerate() {
-            let n = idx as isize % cycle;
-            let key = (if n >= num_rows { n - cycle } else { n }).abs() as usize;
-            let list = temp.entry(key).or_insert_with(|| LinkedList::new());
-            list.push_back(c);
+            let idx = idx as isize;
+            let n = idx % cycle;
+            let key = if n >= num_rows { cycle - n } else { n } as usize;
+            temp.entry(key)
+                .or_insert_with(|| String::with_capacity(length / num_rows as usize))
+                .push(c);
         }
 
         (0..num_rows as usize)
             .flat_map(|i| temp.get(&i))
             .map(|l| l.to_owned())
-            .for_each(|mut l| {
-                while let Some(c) = l.pop_front() {
-                    output.push(c)
-                }
-            });
-
-        output
+            .reduce(|s1, s2| s1 + &s2)
+            .unwrap()
     }
 }
 
