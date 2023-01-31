@@ -14,7 +14,7 @@ impl Solution {
         if num_rows < 1 || num_rows > 1000 {
             panic!("numRows must be between 1 and 1000")
         }
-        if length == 0 || num_rows == 1 {
+        if length <= 1 || num_rows == 1 {
             return s;
         }
 
@@ -23,13 +23,14 @@ impl Solution {
 
         for (idx, c) in s.chars().enumerate() {
             let n = idx as isize % cycle;
-            let key = (if n >= num_rows { n - cycle } else { n }).abs_diff(0isize);
+            let key = (if n >= num_rows { n - cycle } else { n }).abs() as usize;
             let list = temp.entry(key).or_insert_with(|| LinkedList::new());
             list.push_back(c);
         }
 
         (0..num_rows as usize)
-            .map(|i| temp.get(&i).unwrap().to_owned())
+            .flat_map(|i| temp.get(&i))
+            .map(|l| l.to_owned())
             .for_each(|mut l| {
                 while let Some(c) = l.pop_front() {
                     output.push(c)
